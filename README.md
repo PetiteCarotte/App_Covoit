@@ -6,7 +6,7 @@ Ce projet a été proposé par la **Base Aérienne 705 de Tours**. L'objectif de
 
 Vous pourrez retrouver dans le dossier DocumentationCovoit les documents suivants :
  - Le rapport du projet de groupe (V1 de l'application)
- - Le diagramme d'activité schématisant le fonctionnement de l'application
+ - Le diagramme d'activité schématisant le fonctionnement de l'application (à retrouver ici aussi : https://www.figma.com/board/IM74029EZR6aAp68YyzLj9/Blabladef?node-id=4-164&t=KIdhhZ8iBpyKDt3M-1)
  - Les scripts permettant de remplir la base de données
 
 Voici également le lien vers le git de la V1 de l'application : 
