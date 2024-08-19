@@ -68,9 +68,48 @@ class ReservationController extends Controller
             'statut' => 'En attente',
         ]);
 
+        $this->sendMessage($trajet->id_conducteur, "Une personne aimerait réserver votre covoiturage du {$trajet->date_depart}.");
+
+
         return redirect()->route('trajets.vosTrajets')->with('success', 'Votre réservation a été enregistrée avec succès.');
     }
 
+    private function sendMessage($userId, $messageContent)
+    {
+        $messages = $this->getMessages($userId);
+        $messages[] = [
+            'subject' => 'Notification de réservation',
+            'body' => $messageContent,
+            'timestamp' => now()->toDateTimeString(),
+            'is_read' => false,
+        ];
+        $this->storeMessages($userId, $messages);
+
+        $this->incrementUnreadCount($userId);
+
+    }
+
+    private function getMessages($userId)
+    {
+        $filePath = storage_path("app/messages/{$userId}.json");
+        if (file_exists($filePath)) {
+            return json_decode(file_get_contents($filePath), true);
+        }
+        return [];
+    }
+
+    private function storeMessages($userId, $messages)
+    {
+        $filePath = storage_path("app/messages/{$userId}.json");
+        file_put_contents($filePath, json_encode($messages));
+    }
+
+    private function incrementUnreadCount($userId)
+    {
+        $countFilePath = storage_path("app/messages/{$userId}_count.json");
+        $count = file_exists($countFilePath) ? (int) file_get_contents($countFilePath) : 0;
+        file_put_contents($countFilePath, $count + 1);
+    }
 
     /**
      * Annuler une réservation
@@ -112,6 +151,10 @@ class ReservationController extends Controller
             ->where('statut', 'Accepté')
             ->sum('qte_bagages_demandee');
         $trajet->update(['qte_bagages_occupee' => $qte_bagages_occupee]);
+
+        if ($reservation->statut == 'Accepté' || $reservation->statut == 'En attente') {
+            $this->sendMessage($trajet->id_conducteur, "Un passager a annulé sa réservation pour le trajet du {$trajet->date_depart}.");
+        }
 
         return redirect()->back()->with('success', 'La réservation a été annulée avec succès.');
     }

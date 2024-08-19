@@ -6,7 +6,7 @@ use App\Http\Controllers\TrajetController;
 use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisteredUserController;
-
+use App\Http\Controllers\MessageController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -15,10 +15,6 @@ Route::get('/', function () {
 
 Route::get('/vosTrajets', [TrajetController::class, 'vosTrajets'])->name('trajets.vosTrajets');
 
-
-Route::get('/messages', function () {
-    return view('messages');
-})->middleware(['auth', 'verified'])->name('messages');
 
 
 
@@ -38,6 +34,8 @@ Route::middleware('auth')->group(function () {
     // Trajets
     Route::resource('/trajets', TrajetController::class);
 
+    Route::get('/trajets/{trajet}/edit', [TrajetController::class, 'edit'])->name('trajets.edit');
+
     // Réservation d'un trajet
     Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
 
@@ -50,13 +48,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/reservations/{id_passager}/{id_trajet}/refuse', [TrajetController::class, 'refuse'])->name('reservations.refuse');
     //Retirer une reservation
     Route::post('/reservations/{id_passager}/{id_trajet}/remove', [TrajetController::class, 'remove'])->name('reservations.remove');
-    
+
 
     // Suppression d'un trajet
     Route::post('/trajets/delete/{id}', [TrajetController::class, 'delete'])->name('trajets.delete');
 
     Route::get('/communes', 'App\Http\Controllers\CommuneController@search')->name('communes.search');
 
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+
+    Route::delete('/messages/{index}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
 });
 

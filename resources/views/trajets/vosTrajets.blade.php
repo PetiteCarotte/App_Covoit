@@ -30,7 +30,7 @@
                                     <tr>
                                         <td>
                                             @if($trajet->trajet_regulier && $trajet->joursFormatted)
-                                                
+
                                                 Les {{ $trajet->joursFormatted }} à {{ $trajet->heure_depart_formatted }}
                                             @else
                                                 {{ $trajet->date_depart_formatted }} à {{ $trajet->heure_depart_formatted }}
@@ -43,7 +43,7 @@
                                         <td style="text-align: center;">
                                             <!--Demandes Réservations En Attente-->
                                             @if($trajet->reservations->where('statut', 'En attente')->isNotEmpty())
-                                                <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                                                <button type="button" class="btn btn-success clignoter" data-bs-toggle="modal"
                                                     data-bs-target="#demandesModal{{ $trajet->id }}" data-bs-toggle="tooltip"
                                                     data-bs-placement="top" title="Gérer les demandes">
                                                     <i class="bi bi-person-plus-fill"></i>
@@ -53,6 +53,27 @@
                                                 @include('trajets.modals-vosTrajets.demandes-en-attente')
 
                                             @endif
+
+
+                                            <style>
+                                                @keyframes clignoter {
+                                                    0% {
+                                                        opacity: 1;
+                                                    }
+
+                                                    50% {
+                                                        opacity: 0;
+                                                    }
+
+                                                    100% {
+                                                        opacity: 1;
+                                                    }
+                                                }
+
+                                                .clignoter {
+                                                    animation: clignoter 1s infinite;
+                                                }
+                                            </style>
 
                                             <!-- Gestion des passagers Acceptés -->
                                             @if($trajet->reservations->where('statut', 'Accepté')->isNotEmpty())
@@ -117,8 +138,9 @@
                                     <tr>
                                         <td>
                                             @if($reservation->trajet->trajet_regulier && $reservation->joursFormatted)
-                                               
-                                                Les {{ $reservation->joursFormatted }} à {{ $reservation->heure_depart_formatted ?? 'Non spécifié' }}
+
+                                                Les {{ $reservation->joursFormatted }} à
+                                                {{ $reservation->heure_depart_formatted ?? 'Non spécifié' }}
                                             @else
                                                 {{ $reservation->date_depart_formatted ?? 'Non spécifié' }} à
                                                 {{ $reservation->heure_depart_formatted ?? 'Non spécifié' }}

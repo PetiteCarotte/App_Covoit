@@ -16,9 +16,9 @@
                     <thead>
                         <tr>
                             <th>Nom</th>
-                            <th>Date demande</th>
                             <th>Passagers</th>
                             <th>Bagages (en L)</th>
+                            <th>Commentaire</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -29,9 +29,9 @@
                                     <td>{{ $reservation->user->name }}
                                         {{ $reservation->user->firstname }}
                                     </td>
-                                    <td>{{ $reservation->created_at }}</td>
                                     <td>{{ $reservation->nbr_places_demande }}</td>
                                     <td>{{ $reservation->qte_bagages_demandee }}</td>
+                                    <td>{{ $reservation->commentaire }}</td>
                                     <td>
                                         <!-- Retirer un passager accepté -->
                                         <form

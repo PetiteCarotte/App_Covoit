@@ -9,6 +9,9 @@ use App\Models\BaseMilitaire;
 use App\Models\Jours;
 use App\Models\Reservation;
 use App\Http\Requests\TrajetRequest;
+use App\Http\Requests\TrajetUpdateRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 use Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -104,8 +107,8 @@ class TrajetController extends Controller
                 $trajetConducteur->arrivee = $trajetConducteur->commune->nom_de_la_commune ?? 'Non spécifié';
             }
 
-              // Formatage des jours pour trajets réguliers
-              if ($trajetConducteur->trajet_regulier && $trajetConducteur->jours) {
+            // Formatage des jours pour trajets réguliers
+            if ($trajetConducteur->trajet_regulier && $trajetConducteur->jours) {
                 $trajetConducteur->joursFormatted = $this->formatJours($trajetConducteur->jours);
             }
         }
@@ -138,11 +141,11 @@ class TrajetController extends Controller
                     $reservation->arrivee = $reservation->trajet->commune->nom_de_la_commune ?? 'Non spécifié';
                 }
 
-                 // Ajouter la variable de jours pour les réservations régulières
+                // Ajouter la variable de jours pour les réservations régulières
                 if ($reservation->trajet->trajet_regulier && $reservation->trajet->jours) {
                     $reservation->joursFormatted = $this->formatJours($reservation->trajet->jours);
                 }
-                
+
             }
         }
         return view('trajets.vosTrajets', compact('trajetsConducteur', 'reservations'));
@@ -175,13 +178,11 @@ class TrajetController extends Controller
 
         // Critères de filtrage
         if ($request->filled('date_depart')) {
-            // Filtrer tous les trajets pour la journée entière
             $dateDepart = $request->date_depart;
             $query->whereDate('date_depart', $dateDepart);
         }
 
         if ($request->filled('heure_depart')) {
-            // Considérer l'heure comme un critère "à partir de"
             $heureDepart = $request->heure_depart;
             $query->whereTime('heure_depart', '>=', $heureDepart);
         }
@@ -197,11 +198,6 @@ class TrajetController extends Controller
             $query->where('id_base_militaire', $request->id_base_militaire);
         }
 
-        // Filtrage par trajets réguliers si nécessaire
-        if ($request->filled('trajet_regulier')) {
-            $query->where('trajet_regulier', true);
-        }
-
         // Récupérer les trajets
         $trajets = $query->get();
 
@@ -212,9 +208,7 @@ class TrajetController extends Controller
         $depart = $request->input('depart');
         $arrivee = $request->input('arrivee');
         $domicile_base = $request->input('domicile_base');
-        // dd($domicile_base);
 
-        //Si domicile_base = false, recupere les trajets avec boolean DomicileBase = false
         if ($domicile_base == 'false') {
             $trajets = $trajets->filter(function ($trajet) use ($depart, $arrivee, $domicile_base) {
                 return $trajet->domicile_base == false;
@@ -222,6 +216,19 @@ class TrajetController extends Controller
         } else {
             $trajets = $trajets->filter(function ($trajet) use ($depart, $arrivee, $domicile_base) {
                 return $trajet->domicile_base == true;
+            });
+        }
+
+        // Tri des trajets réguliers
+        if ($request->filled('trajet_regulier')) {
+            // Si la case est cochée, trier les trajets réguliers avant
+            $trajets = $trajets->sortByDesc(function ($trajet) {
+                return $trajet->trajet_regulier ? 1 : 0;
+            });
+        } else {
+            // Si la case n'est pas cochée, trier les trajets réguliers après
+            $trajets = $trajets->sortBy(function ($trajet) {
+                return $trajet->trajet_regulier ? 1 : 0;
             });
         }
 
@@ -249,23 +256,18 @@ class TrajetController extends Controller
             'November' => 'novembre',
             'December' => 'décembre',
         ];
+
         // Formatage de la date et de l'heure pour chaque trajet
         foreach ($trajets as $trajet) {
-            // Création d'un objet DateTime à partir de la date de départ
             $date_depart = new DateTime($trajet->date_depart);
-            // Formatage de la date en français
             $jourSemaineFr = $joursSemaine[$date_depart->format('l')];
             $moisFr = $mois[$date_depart->format('F')];
             $date_depart_formatted = $jourSemaineFr . ' ' . $date_depart->format('j') . ' ' . $moisFr;
-            // Formatage de l'heure en "HH:MM"
             $heure_depart_formatted = date('H:i', strtotime($trajet->heure_depart));
-            // Assignez les valeurs formatées au trajet
+
             $trajet->date_depart_formatted = $date_depart_formatted;
             $trajet->heure_depart_formatted = $heure_depart_formatted;
 
-
-
-            // Définir les lieux de départ et d'arrivée en fonction de domicile_base
             if ($trajet->domicile_base) {
                 $trajet->depart = $trajet->commune->nom_de_la_commune ?? 'Non spécifié';
                 $trajet->arrivee = $trajet->baseMilitaire->nom_de_la_base ?? 'Non spécifié';
@@ -273,18 +275,14 @@ class TrajetController extends Controller
                 $trajet->depart = $trajet->baseMilitaire->nom_de_la_base ?? 'Non spécifié';
                 $trajet->arrivee = $trajet->commune->nom_de_la_commune ?? 'Non spécifié';
             }
-
         }
 
-        // return view('trajets.index', compact('trajets', 'communes', 'basesMilitaires'));
         return view('trajets.index', [
             'trajets' => $trajets,
             'communes' => Commune::all(),
             'basesMilitaires' => BaseMilitaire::all()
         ]);
     }
-
-
 
     // Affiche le formulaire de création
     public function create()
@@ -357,23 +355,23 @@ class TrajetController extends Controller
         return view('trajets.vosTrajets', compact('trajet', 'communes', 'conducteurs', 'basesMilitaires', 'jours'));
     }
 
-    // Met à jour un trajet spécifique
-    public function update(TrajetRequest $request, Trajet $trajet)
+    public function update(TrajetUpdateRequest $request, Trajet $trajet): RedirectResponse
     {
-        // Validation des données
-        $validatedData = $request->validate([
-            'date_depart' => 'required|date',
-            'heure_depart' => 'required|date_format:H:i',
-            'qte_bagages' => 'required|integer',
-            'nbr_places' => 'required|integer',
-            'description' => 'nullable|string'
-        ]);
+        $trajet->fill($request->validated());
+        $trajet->save();
 
-        // Mise à jour des données du trajet
-        $trajet->update($validatedData);
+        // Envoi de message à chaque passager
+        $reservations = Reservation::where('id_trajet', $trajet->id)
+            ->where('statut', 'Accepté')
+            ->get();
 
-        // Redirect with success message
-        return redirect()->route('trajets.vosTrajets')->with('success', 'Le trajet a été mis à jour avec succès.');
+        foreach ($reservations as $reservation) {
+            if($reservation->statut !== 'Refusé'){
+                $this->sendMessage($reservation->id_passager, "Le trajet du {$trajet->date_depart} a été modifié par le conducteur.");
+            }
+        }
+
+        return Redirect::route('trajets.vosTrajets', $trajet->id)->with('status', 'trajet-updated');
     }
 
     public function accept(Request $request, $id_passager, $id_trajet)
@@ -405,6 +403,9 @@ class TrajetController extends Controller
             ->sum('qte_bagages_demandee');
         $trajet->update(['qte_bagages_occupee' => $qte_bagages_occupee]);
 
+        // Envoi de message au passager
+        $this->sendMessage($reservation->id_passager, "Votre réservation pour le trajet du {$reservation->trajet->date_depart} a été acceptée.");
+
         // Redirection avec un message de succès
         return back()->with('success', 'Réservation acceptée avec succès.');
     }
@@ -424,8 +425,49 @@ class TrajetController extends Controller
         // Mettre à jour le statut de la réservation
         $reservation->update(['statut' => 'Refusé']);
 
+        // Envoi de message au passager
+        $this->sendMessage($reservation->id_passager, "Votre réservation pour le trajet du {$reservation->trajet->date_depart} a été refusée.");
+
         // Redirection avec un message de succès
         return back()->with('success', 'Réservation refusée avec succès.');
+    }
+
+    private function sendMessage($userId, $messageContent)
+    {
+        $messages = $this->getMessages($userId);
+        $messages[] = [
+            'subject' => 'Notification de réservation',
+            'body' => $messageContent,
+            'timestamp' => now()->toDateTimeString(),
+            'is_read' => false,
+
+        ];
+        $this->storeMessages($userId, $messages);
+
+        $this->incrementUnreadCount($userId);
+
+    }
+
+    private function getMessages($userId)
+    {
+        $filePath = storage_path("app/messages/{$userId}.json");
+        if (file_exists($filePath)) {
+            return json_decode(file_get_contents($filePath), true);
+        }
+        return [];
+    }
+
+    private function storeMessages($userId, $messages)
+    {
+        $filePath = storage_path("app/messages/{$userId}.json");
+        file_put_contents($filePath, json_encode($messages));
+    }
+
+    private function incrementUnreadCount($userId)
+    {
+        $countFilePath = storage_path("app/messages/{$userId}_count.json");
+        $count = file_exists($countFilePath) ? (int)file_get_contents($countFilePath) : 0;
+        file_put_contents($countFilePath, $count + 1);
     }
 
     public function remove($id_passager, $id_trajet)
@@ -453,6 +495,8 @@ class TrajetController extends Controller
             ->sum('qte_bagages_demandee');
         $trajet->update(['qte_bagages_occupee' => $qte_bagages_occupee]);
 
+        $this->sendMessage($reservation->id_passager, "Vous avez été retiré du trajet du {$reservation->trajet->date_depart}.");
+
         // Redirection avec un message de succès
         return back()->with('success', 'Passager retiré avec succès.');
     }
@@ -468,6 +512,12 @@ class TrajetController extends Controller
         return redirect()->route('trajets.index')->with('success', 'Le trajet a été supprimé avec succès.');
     }
 
+    /**
+     * Supprimer un trajet et ses réservations associées
+     * @param \Illuminate\Http\Request $request
+     * @param mixed $id
+     * @return RedirectResponse
+     */
     public function delete(Request $request, $id)
     {
         $user = auth()->user();
@@ -483,7 +533,11 @@ class TrajetController extends Controller
         // Annuler les réservations associées
         $reservations = Reservation::where('id_trajet', $trajet->id)->get();
 
+        //Si le passager a été refusé ou retiré, il ne sera pas notifié
         foreach ($reservations as $reservation) {
+            if ($reservation->statut !== 'Refusé') {
+            $this->sendMessage($reservation->id_passager, "Le trajet du {$trajet->date_depart} a été supprimé par le conducteur.");
+            }
             $reservation->delete();
         }
 

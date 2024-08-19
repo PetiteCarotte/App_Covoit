@@ -7,28 +7,27 @@
     </header>
     <form method="POST" action="{{ route('register') }}">
         @csrf
-
-        <!-- Name -->
-        <div class="mt-2">
-            <x-input-label for="name" :value="__('Nom')" />
-            <x-text-input id="name" class="form-control mt-1 w-full" type="text" name="name" :value="old('name')" required
-                autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
-
         <!-- First Name -->
         <div class="mt-2">
             <x-input-label for="firstname" :value="__('Prénom')" />
             <x-text-input id="firstname" class="form-control mt-1 w-full" type="text" name="firstname"
-                :value="old('firstname')" required autocomplete="firstname" />
+                :value="old('firstname')" required autofocus autocomplete="firstname" />
             <x-input-error :messages="$errors->get('firstname')" class="mt-2" />
+        </div>
+
+        <!-- Name -->
+        <div class="mt-2">
+            <x-input-label for="name" :value="__('Nom')" />
+            <x-text-input id="name" class="form-control mt-1 w-full" type="text" name="name" :value="old('name')"
+                required  autocomplete="name" />
+            <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
         <div class="mt-2">
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="form-control mt-1 w-full" type="email" name="email" :value="old('email')" required
-                autocomplete="username" />
+            <x-text-input id="email" class="form-control mt-1 w-full" type="email" name="email" :value="old('email')"
+                required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
@@ -50,7 +49,7 @@
 
         <!-- Numero de Poste -->
         <div class="mt-2">
-            <x-input-label for="numero_de_poste" >Numéro de poste<small> ex : 862 000 00 00</small></x-input-label> 
+            <x-input-label for="numero_de_poste">Numéro de poste<small> ex : 862 000 00 00</small></x-input-label>
             <x-text-input id="numero_de_poste" class="form-control mt-1 w-full" type="text" name="numero_de_poste"
                 :value="old('numero_de_poste', '862')" />
             <x-input-error :messages="$errors->get('numero_de_poste')" class="mt-2" />
@@ -60,8 +59,8 @@
         <!-- Numero de Telephone -->
         <div class="mt-2">
             <x-input-label for="numero_de_telephone" :value="__('Numéro de téléphone')" />
-            <x-text-input id="numero_de_telephone" class="form-control mt-1 w-full" type="text" name="numero_de_telephone"
-                :value="old('numero_de_telephone')" />
+            <x-text-input id="numero_de_telephone" class="form-control mt-1 w-full" type="text"
+                name="numero_de_telephone" :value="old('numero_de_telephone')" />
             <x-input-error :messages="$errors->get('numero_de_telephone')" class="mt-2" />
         </div>
         <!-- Commune -->

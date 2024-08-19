@@ -16,10 +16,9 @@
                     <thead>
                         <tr>
                             <th>Nom</th>
-                            <th>Date demande</th>
                             <th>Passagers </th>
                             <th>Bagages (en L)</th>
-                            <th>Commentaire</th>
+                            <th>Remarque</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -30,7 +29,6 @@
                                     <td>{{ $reservation->user->name }}
                                         {{ $reservation->user->firstname }}
                                     </td>
-                                    <td>{{ $reservation->created_at }}</td>
                                     <td>{{ $reservation->nbr_places_demande }}</td>
                                     <td>{{ $reservation->qte_bagages_demandee }}</td>
                                     <td>{{ $reservation->commentaire }}</td>
@@ -40,13 +38,17 @@
                                             action="{{ route('reservations.accept', ['id_passager' => $reservation->id_passager, 'id_trajet' => $reservation->id_trajet]) }}"
                                             method="POST" style="display: inline;">
                                             @csrf
-                                            <button type="submit" class="btn btn-success">Accepter</button>
+                                           
+                                            <button type="submit" class="btn btn-success" data-bs-toggle="modal" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Accepter le passager"><i class="bi bi-check-circle"></i></button>
                                         </form>
                                         <form
                                             action="{{ route('reservations.refuse', ['id_passager' => $reservation->id_passager, 'id_trajet' => $reservation->id_trajet]) }}"
                                             method="POST" style="display: inline;">
                                             @csrf
-                                            <button type="submit" class="btn btn-danger">Refuser</button>
+                                            <button type="submit" class="btn btn-danger" data-bs-toggle="modal" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Refuser le passager"><i class="bi bi-x-circle"></i></button>
+                                           
                                         </form>
                                     </td>
                                 </tr>

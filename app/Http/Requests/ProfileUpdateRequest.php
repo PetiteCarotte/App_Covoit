@@ -16,6 +16,7 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'firstname' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
         ];
@@ -29,6 +30,9 @@ class ProfileUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'firstname.required' => 'Le champ prénom est requis.',
+            'firstname.string' => 'Le champ prénom doit être une chaîne de caractères.',
+            'firstname.max' => 'Le champ prénom ne doit pas dépasser :max caractères.',
             'name.required' => 'Le champ nom est requis.',
             'name.string' => 'Le champ nom doit être une chaîne de caractères.',
             'name.max' => 'Le champ nom ne doit pas dépasser :max caractères.',
